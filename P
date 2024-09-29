@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Contas Cadastradas</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+    body {
+      margin: 0;
+      font-family: 'Noto Sans', sans-serif;
+      background: #f4f6f9;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .main-content {
+      width: 100%;
+      max-width: 900px;
+      padding: 30px;
+      background: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid #ddd;
+    }
+
+    .accounts-card > h1 {
+      color: #003366;
+      font-weight: 700;
+      margin: 0 0 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .accounts-card > h1 i {
+      margin-right: 10px;
+      font-size: 24px;
+    }
+
+    .account-list {
+      max-height: 350px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+
+    .account-item {
+      background: #f1f1f1;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .account-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .account-info > span {
+      color: #333;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .account-info i {
+      margin-right: 5px;
+      color: #007bff;
+    }
+
+    .btn-ban {
+      background: #dc3545;
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      padding: 10px 15px;
+      cursor: pointer;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+      font-weight: 600;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-ban i {
+      margin-right: 8px;
+    }
+
+    .btn-ban:hover {
+      background: #c82333;
+    }
+
+    .account-count {
+      font-weight: 700;
+      color: #003366;
+      font-size: 16px;
+      text-align: right;
+    }
+
+    .no-accounts {
+      text-align: center;
+      color: #666;
+      font-weight: bold;
+    }
+
+    /* Estilos do Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #ffffff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      width: 400px;
+      color: #333;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content label {
+      font-size: 14px;
+      font-weight: bold;
+      display: block;
+    }
+
+    .modal-content input, .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    .ban-permanent {
+      display: flex;
+      align-items: center;
+    }
+
+    .ban-permanent input {
+      margin-right: 10px;
+    }
+
+    .modal-footer {
+      text-align: right;
+    }
+
+    .btn-cancel {
+      background-color: #6c757d;
+      border: none;
+      padding: 8px 12px;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn-cancel:hover {
+      background-color: #5a6268;
+    }
+
+    .btn-confirm {
+      background-color: #007bff;
+      border: none;
+      padding: 8px 12px;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn-confirm:hover {
+      background-color: #0056b3;
+    }
+  </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database.js"></script>
+</head>
+<body>
+
+  <div class="main-content">
+    <div id="userSection">
+      <div class="accounts-card" id="accountsCard">
+        <h1><i class="fas fa-users"></i>Contas Registradas</h1>
+        <div id="account-list" class="account-list">
+          <!-- As contas registradas serão listadas aqui -->
+        </div>
+        <div id="account-count" class="account-count">
+          <!-- Contador de contas será atualizado aqui -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmação de banimento -->
+  <div id="banModal" class="modal">
+    <div class="modal-content">
+      <h2>Banir Usuário</h2>
+      <p>Você está prestes a banir um usuário. Isso pode ter implicações sérias. Certifique-se de fornecer um motivo válido.</p>
+      <label for="banReason">Motivo do Banimento:</label>
+      <textarea id="banReason" rows="4" placeholder="Digite o motivo do banimento"></textarea>
+
+      <label for="banTime">Tempo de Banimento (em dias):</label>
+      <input type="number" id="banTime" placeholder="Digite o número de dias">
+
+      <div class="ban-permanent">
+        <input type="checkbox" id="permanentBan" name="permanentBan" onclick="toggleBanTime()">
+        <label for="permanentBan">Banimento permanente</label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-confirm" onclick="confirmBan()">Banir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLydRc7vqCkWsnVo0igp-jnszTkLDlVZ8",
+  authDomain: "dados-a1d4d.firebaseapp.com",
+  databaseURL: "https://dados-a1d4d-default-rtdb.firebaseio.com",
+  projectId: "dados-a1d4d",
+  storageBucket: "dados-a1d4d.appspot.com",
+  messagingSenderId: "550441905479",
+  appId: "1:550441905479:web:a1bea1249e89027a95b062"
+};
+
+
+    // Inicializa o Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let selectedUsername = '';
+
+    function listAccounts() {
+      const accountList = document.getElementById('account-list');
+      const accountCount = document.getElementById('account-count');
+      accountList.innerHTML = ''; // Limpa a lista
+
+      database.ref('contas/').once('value', (snapshot) => {
+        let count = 0;
+
+        snapshot.forEach((childSnapshot) => {
+          const username = childSnapshot.key;
+          const accountData = childSnapshot.val();
+
+          if (accountData.banido) return; // Ignora contas banidas
+
+          // Cria o elemento com as informações do usuário, senha e data de criação
+          const item = document.createElement('div');
+          item.className = 'account-item';
+          item.innerHTML = `
+            <div class="account-info">
+              <span><i class="fas fa-user"></i>Usuário: ${username}</span>
+              <span><i class="fas fa-key"></i>Senha: ${accountData.senha}</span>
+              <span><i class="fas fa-calendar-alt"></i>Data de Criação: ${accountData.dataCriacao}</span>
+            </div>
+            <button class="btn-ban" onclick="openModal('${username}')"><i class="fas fa-ban"></i>Banir</button>
+          `;
+
+          // Adiciona o item à lista
+          accountList.appendChild(item);
+          count++;
+        });
+
+        // Atualiza o contador de contas
+        accountCount.innerHTML = `Total de Contas: ${count}`;
+      });
+    }
+
+    // Abre o modal para banir um usuário
+    function openModal(username) {
+      selectedUsername = username;
+      document.getElementById('banModal').style.display = 'block';
+    }
+
+    // Fecha o modal
+    function closeModal() {
+      document.getElementById('banModal').style.display = 'none';
+      document.getElementById('banReason').value = '';
+      document.getElementById('banTime').value = '';
+      document.getElementById('permanentBan').checked = false;
+    }
+
+    // Confirma o banimento do usuário
+    function confirmBan() {
+      const reason = document.getElementById('banReason').value;
+      const banTime = document.getElementById('banTime').value;
+      const isPermanent = document.getElementById('permanentBan').checked;
+
+      // Atualiza os dados do usuário no Firebase
+      database.ref(`contas/${selectedUsername}`).update({
+        banido: true,
+        motivoBanimento: reason,
+        tempoBanimento: isPermanent ? "Permanente" : banTime,
+        dataBanimento: new Date().toISOString()
+      }).then(() => {
+        alert(`Usuário ${selectedUsername} banido com sucesso!`);
+        closeModal();
+        listAccounts(); // Atualiza a lista de contas
+      }).catch((error) => {
+        alert(`Erro ao banir usuário: ${error.message}`);
+      });
+    }
+
+    // Alterna o estado do campo de tempo de banimento
+    function toggleBanTime() {
+      const banTimeInput = document.getElementById('banTime');
+      banTimeInput.disabled = document.getElementById('permanentBan').checked;
+    }
+
+    // Chama a função para listar as contas ao carregar a página
+    window.onload = listAccounts;
+  </script>
+</body>
+</html>
