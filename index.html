@@ -50,10 +50,18 @@
             color: white;
             cursor: pointer;
         }
+
+        .name-input {
+            padding: 10px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
+        <input type="text" id="nameInput" class="name-input" placeholder="Digite seu nome...">
         <div id="messages" class="messages"></div>
         <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
         <button id="sendButton">Enviar</button>
@@ -82,12 +90,15 @@
 
         // Send message
         document.getElementById('sendButton').addEventListener('click', () => {
+            const nameInput = document.getElementById('nameInput');
             const messageInput = document.getElementById('messageInput');
+            const name = nameInput.value || "Anônimo"; // Default to "Anônimo" if no name is provided
             const message = messageInput.value;
 
             if (message) {
                 const newMessageRef = ref(db, 'messages/' + Date.now());
                 set(newMessageRef, {
+                    name: name,
                     text: message,
                     timestamp: Date.now()
                 });
@@ -103,7 +114,131 @@
             snapshot.forEach((childSnapshot) => {
                 const messageData = childSnapshot.val();
                 const messageDiv = document.createElement('div');
-                messageDiv.textContent = messageData.text;
+                messageDiv.textContent = `${messageData.name}: ${messageData.text}`; // Display name and message
+                messagesContainer.appendChild(messageDiv);
+            });
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Simples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .messages div {
+            margin: 5px 0;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: none;
+            border-top: 1px solid #ccc;
+            width: calc(100% - 80px);
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .name-input {
+            padding: 10px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <input type="text" id="nameInput" class="name-input" placeholder="Digite seu nome...">
+        <div id="messages" class="messages"></div>
+        <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+        <button id="sendButton">Enviar</button>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLydRc7vqCkWsnVo0igp-jnszTkLDlVZ8",
+            authDomain: "dados-a1d4d.firebaseapp.com",
+            databaseURL: "https://dados-a1d4d-default-rtdb.firebaseio.com",
+            projectId: "dados-a1d4d",
+            storageBucket: "dados-a1d4d.appspot.com",
+            messagingSenderId: "550441905479",
+            appId: "1:550441905479:web:a1bea1249e89027a95b062"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const messagesRef = ref(db, 'messages');
+
+        // Send message
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const nameInput = document.getElementById('nameInput');
+            const messageInput = document.getElementById('messageInput');
+            const name = nameInput.value || "Anônimo"; // Default to "Anônimo" if no name is provided
+            const message = messageInput.value;
+
+            if (message) {
+                const newMessageRef = ref(db, 'messages/' + Date.now());
+                set(newMessageRef, {
+                    name: name,
+                    text: message,
+                    timestamp: Date.now()
+                });
+                messageInput.value = ''; // Clear input
+            }
+        });
+
+        // Listen for new messages
+        onValue(messagesRef, (snapshot) => {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // Clear previous messages
+
+            snapshot.forEach((childSnapshot) => {
+                const messageData = childSnapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = `${messageData.name}: ${messageData.text}`; // Display name and message
                 messagesContainer.appendChild(messageDiv);
             });
 
