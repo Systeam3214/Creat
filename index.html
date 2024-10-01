@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Simples</title>
+    <title>Sistema de Login e Contatos</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,56 +15,27 @@
             margin: 0;
         }
 
-        .chat-container {
+        .container {
             background: white;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 400px;
-            max-height: 500px;
+            max-height: 600px;
             display: flex;
             flex-direction: column;
+            padding: 20px;
         }
 
-        .messages {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            border-bottom: 1px solid #ccc;
-        }
-
-        .message {
-            position: relative;
-            margin: 5px 0;
-            padding: 8px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-        }
-
-        .delete-x {
+        .login-container, .main-container {
             display: none;
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: red;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            padding: 2px 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
         }
 
-        .message.show-delete .delete-x {
-            display: inline-block;
-        }
-
-        input[type="text"] {
+        input[type="text"], input[type="password"], input[type="number"] {
             padding: 10px;
-            border: none;
-            border-top: 1px solid #ccc;
-            width: calc(100% - 80px);
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            width: 100%;
+            border-radius: 5px;
         }
 
         button {
@@ -73,16 +44,57 @@
             background-color: #007bff;
             color: white;
             cursor: pointer;
-        }
-
-        .name-input {
-            padding: 10px;
-            border: none;
-            border-bottom: 1px solid #ccc;
+            width: 100%;
+            border-radius: 5px;
             margin-bottom: 10px;
         }
 
-        /* Modal styles */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .nav-buttons button {
+            width: 45%;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Contatos e Configurações */
+        .contacts-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .contacts-list li {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .add-contact {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Modal Adicionar Contato */
         .modal {
             display: none;
             position: fixed;
@@ -100,51 +112,59 @@
             padding: 20px;
             border-radius: 8px;
             text-align: center;
-            width: 300px;
-        }
-
-        .modal-content button {
-            margin: 10px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .modal-content .confirm {
-            background-color: red;
-            color: white;
-        }
-
-        .modal-content .cancel {
-            background-color: gray;
-            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <input type="text" id="nameInput" class="name-input" placeholder="Digite seu nome...">
-        <div id="messages" class="messages"></div>
-        <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
-        <button id="sendButton">Enviar</button>
+    <div class="container">
+        <!-- Login Section -->
+        <div id="loginSection" class="login-container">
+            <h2>Login</h2>
+            <input type="text" id="loginName" placeholder="Nome">
+            <input type="password" id="loginPassword" placeholder="Senha">
+            <button id="loginButton">Entrar</button>
+        </div>
+
+        <!-- Main Section -->
+        <div id="mainSection" class="main-container">
+            <div class="nav-buttons">
+                <button id="contactsButton">Contatos</button>
+                <button id="settingsButton">Configurações</button>
+            </div>
+
+            <!-- Contacts Section -->
+            <div id="contactsSection" class="section">
+                <h3>Contatos</h3>
+                <ul id="contactsList" class="contacts-list"></ul>
+                <button class="add-contact" id="addContactButton">+</button>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settingsSection" class="section">
+                <h3>Configurações</h3>
+                <p>Nome: <span id="currentName"></span></p>
+                <p>Número de Contato: <span id="contactNumber"></span></p>
+                <input type="text" id="newName" placeholder="Novo Nome">
+                <button id="changeNameButton">Trocar Nome</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Modal de confirmação -->
-    <div id="deleteModal" class="modal">
+    <!-- Modal Adicionar Contato -->
+    <div id="addContactModal" class="modal">
         <div class="modal-content">
-            <p>Tem certeza que deseja apagar esta mensagem?</p>
-            <button id="confirmDelete" class="confirm">Apagar</button>
-            <button id="cancelDelete" class="cancel">Cancelar</button>
+            <h4>Adicionar Contato</h4>
+            <input type="number" id="newContactNumber" placeholder="Número do Contato">
+            <button id="confirmAddContact">Adicionar</button>
+            <button id="cancelAddContact">Cancelar</button>
         </div>
     </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
+        // Firebase setup
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBLydRc7vqCkWsnVo0igp-jnszTkLDlVZ8",
             authDomain: "dados-a1d4d.firebaseapp.com",
@@ -155,94 +175,150 @@
             appId: "1:550441905479:web:a1bea1249e89027a95b062"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const messagesRef = ref(db, 'messages');
 
-        let messageIdToDelete = null; // ID da mensagem a ser apagada
+        let currentUser = null;
 
-        // Send message
-        document.getElementById('sendButton').addEventListener('click', () => {
-            const nameInput = document.getElementById('nameInput');
-            const messageInput = document.getElementById('messageInput');
-            const name = nameInput.value || "Anônimo"; // Default to "Anônimo" if no name is provided
-            const message = messageInput.value;
+        // Login logic
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const loginName = document.getElementById('loginName').value;
+            const loginPassword = document.getElementById('loginPassword').value;
+            const userRef = ref(db, 'users/' + loginName);
 
-            if (message) {
-                const newMessageRef = ref(db, 'messages/' + Date.now());
-                set(newMessageRef, {
-                    name: name,
-                    text: message,
-                    timestamp: Date.now()
+            get(userRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    if (userData.password === loginPassword) {
+                        currentUser = userData;
+                        document.getElementById('loginSection').style.display = 'none';
+                        document.getElementById('mainSection').style.display = 'block';
+                        loadUserData();
+                    } else {
+                        alert('Senha incorreta!');
+                    }
+                } else {
+                    alert('Usuário não encontrado!');
+                }
+            });
+        });
+
+        // Load user data
+        function loadUserData() {
+            document.getElementById('currentName').textContent = currentUser.name;
+            document.getElementById('contactNumber').textContent = currentUser.contactNumber;
+            loadContacts();
+        }
+
+        // Change name
+        document.getElementById('changeNameButton').addEventListener('click', () => {
+            const newName = document.getElementById('newName').value;
+            if (newName) {
+                const userRef = ref(db, 'users/' + currentUser.name);
+                update(userRef, { name: newName }).then(() => {
+                    alert('Nome trocado com sucesso!');
+                    currentUser.name = newName;
+                    document.getElementById('currentName').textContent = newName;
                 });
-                messageInput.value = ''; // Clear input
             }
         });
 
-        // Listen for new messages
-        onValue(messagesRef, (snapshot) => {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Clear previous messages
-
-            snapshot.forEach((childSnapshot) => {
-                const messageData = childSnapshot.val();
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                messageDiv.setAttribute('data-id', childSnapshot.key); // Set the message ID for deletion
-                messageDiv.textContent = `${messageData.name}: ${messageData.text}`;
-
-                // Create delete "X" button
-                const deleteX = document.createElement('button');
-                deleteX.classList.add('delete-x');
-                deleteX.textContent = "X";
-
-                // Add event listener to show modal for deleting the message
-                deleteX.addEventListener('click', () => {
-                    messageIdToDelete = messageDiv.getAttribute('data-id'); // Store the message ID to delete
-                    document.getElementById('deleteModal').style.display = 'flex'; // Show modal
-                });
-
-                messageDiv.appendChild(deleteX);
-                messagesContainer.appendChild(messageDiv);
-
-                // Detect long press to show delete button
-                let pressTimer;
-                messageDiv.addEventListener('mousedown', () => {
-                    pressTimer = setTimeout(() => {
-                        messageDiv.classList.add('show-delete');
-                    }, 1000); // 1 second hold
-                });
-
-                messageDiv.addEventListener('mouseup', () => {
-                    clearTimeout(pressTimer);
-                });
-
-                messageDiv.addEventListener('mouseleave', () => {
-                    clearTimeout(pressTimer);
+        // Load contacts
+        function loadContacts() {
+            const contactsRef = ref(db, 'contacts/' + currentUser.contactNumber);
+            onValue(contactsRef, (snapshot) => {
+                const contactsList = document.getElementById('contactsList');
+                contactsList.innerHTML = ''; // Clear previous list
+                snapshot.forEach((contactSnapshot) => {
+                    const contact = contactSnapshot.val();
+                    const li = document.createElement('li');
+                    li.textContent = contact.name + ' (' + contact.number + ')';
+                    contactsList.appendChild(li);
                 });
             });
+        }
 
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+        // Add contact
+        document.getElementById('addContactButton').addEventListener('click', () => {
+            document.getElementById('addContactModal').style.display = 'flex';
         });
 
-        // Modal confirmation logic
-        document.getElementById('confirmDelete').addEventListener('click', () => {
-            if (messageIdToDelete) {
-                const messageToDeleteRef = ref(db, 'messages/' + messageIdToDelete);
-                remove(messageToDeleteRef).then(() => {
-                    alert('Mensagem apagada com sucesso!');
-                    document.getElementById('deleteModal').style.display = 'none'; // Hide modal
+        document.getElementById('confirmAddContact').addEventListener('click', () => {
+            const newContactNumber = document.getElementById('newContactNumber').value;
+            if (newContactNumber) {
+    // Verificar se o número do contato existe no banco de dados
+    const contactRef = ref(db, 'users/' + newContactNumber);
+    get(contactRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const contactData = snapshot.val();
+            
+            // Adicionar o contato à lista de contatos do usuário atual
+            const userContactsRef = ref(db, 'contacts/' + currentUser.contactNumber + '/' + newContactNumber);
+            set(userContactsRef, {
+                name: contactData.name,
+                number: newContactNumber
+            }).then(() => {
+                alert('Contato adicionado com sucesso!');
+                document.getElementById('addContactModal').style.display = 'none';
+                loadContacts(); // Recarregar a lista de contatos
+            }).catch((error) => {
+                console.error('Erro ao adicionar contato: ', error);
+            });
+
+        } else {
+           // Verificar se o número do contato existe no banco de dados
+                const contactRef = ref(db, 'users/' + newContactNumber);
+                get(contactRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const contactData = snapshot.val();
+                        const contactsRef = ref(db, 'contacts/' + currentUser.contactNumber + '/' + newContactNumber);
+                        set(contactsRef, {
+                            name: contactData.name,
+                            number: newContactNumber
+                        }).then(() => {
+                            alert('Contato adicionado com sucesso!');
+                            document.getElementById('addContactModal').style.display = 'none';
+                            loadContacts(); // Recarregar a lista de contatos
+                        });
+                    } else {
+                        alert('Número de contato não encontrado!');
+                    }
                 }).catch((error) => {
-                    alert('Erro ao apagar a mensagem: ' + error.message);
-                    document.getElementById('deleteModal').style.display = 'none'; // Hide modal
+                    console.error('Erro ao buscar contato: ', error);
                 });
             }
         });
 
-        document.getElementById('cancelDelete').addEventListener('click', () => {
-            document.getElementById('deleteModal').style.display = 'none'; // Hide modal
+        // Fechar o modal de adicionar contato
+        document.getElementById('cancelAddContact').addEventListener('click', () => {
+            document.getElementById('addContactModal').style.display = 'none';
         });
+
+        // Navegação entre Contatos e Configurações
+        document.getElementById('contactsButton').addEventListener('click', () => {
+            document.getElementById('contactsSection').classList.add('active');
+            document.getElementById('settingsSection').classList.remove('active');
+        });
+
+        document.getElementById('settingsButton').addEventListener('click', () => {
+            document.getElementById('settingsSection').classList.add('active');
+            document.getElementById('contactsSection').classList.remove('active');
+        });
+
+        // Gerar número de contato aleatório ao criar novo usuário
+        function createUser(name, password) {
+            const randomNumber = Math.floor(Math.random() * 10) + 1;
+            const userRef = ref(db, 'users/' + name);
+            set(userRef, {
+                name: name,
+                password: password,
+                contactNumber: randomNumber
+            }).then(() => {
+                alert('Usuário criado com sucesso!');
+            }).catch((error) => {
+                console.error('Erro ao criar usuário: ', error);
+            });
+        }
     </script>
 </body>
 </html>
