@@ -32,8 +32,31 @@
             border-bottom: 1px solid #ccc;
         }
 
-        .messages div {
+        .message {
+            position: relative;
             margin: 5px 0;
+            padding: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            cursor: pointer;
+        }
+
+        .message.show-delete .delete-btn {
+            display: inline-block;
         }
 
         input[type="text"] {
@@ -70,7 +93,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -114,8 +137,44 @@
             snapshot.forEach((childSnapshot) => {
                 const messageData = childSnapshot.val();
                 const messageDiv = document.createElement('div');
-                messageDiv.textContent = `${messageData.name}: ${messageData.text}`; // Display name and message
+                messageDiv.classList.add('message');
+                messageDiv.setAttribute('data-id', childSnapshot.key); // Set the message ID for deletion
+                messageDiv.textContent = `${messageData.name}: ${messageData.text}`;
+
+                // Create delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.textContent = "Apagar";
+
+                // Add event listener to delete the message
+                deleteBtn.addEventListener('click', () => {
+                    const messageId = messageDiv.getAttribute('data-id');
+                    const messageToDeleteRef = ref(db, 'messages/' + messageId);
+                    remove(messageToDeleteRef).then(() => {
+                        alert('Mensagem apagada com sucesso!');
+                    }).catch((error) => {
+                        alert('Erro ao apagar a mensagem: ' + error.message);
+                    });
+                });
+
+                messageDiv.appendChild(deleteBtn);
                 messagesContainer.appendChild(messageDiv);
+
+                // Detect long press to show delete button
+                let pressTimer;
+                messageDiv.addEventListener('mousedown', () => {
+                    pressTimer = setTimeout(() => {
+                        messageDiv.classList.add('show-delete');
+                    }, 1000); // 1 second hold
+                });
+
+                messageDiv.addEventListener('mouseup', () => {
+                    clearTimeout(pressTimer);
+                });
+
+                messageDiv.addEventListener('mouseleave', () => {
+                    clearTimeout(pressTimer);
+                });
             });
 
             messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
